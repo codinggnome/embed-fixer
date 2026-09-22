@@ -15,9 +15,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends git \
 WORKDIR /app
 
 # Install dependencies
-RUN --mount=type=bind,source=uv.lock,target=uv.lock \
-    --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-project --no-dev ${EXTRA_DEPENDENCIES:+--extra} ${EXTRA_DEPENDENCIES}
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-dev ${EXTRA_DEPENDENCIES:+--extra} ${EXTRA_DEPENDENCIES}
 
 # Copy the application code
 COPY . /app
