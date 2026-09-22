@@ -43,7 +43,7 @@ def get_filesize(fp: io.BufferedIOBase) -> int:
 
 
 # Query params that identify content (rather than track shares) and must survive cleaning
-KEEP_QUERY_PARAMS: Final[dict[str, set[str]]] = {"youtube.com": {"v"}}
+KEEP_QUERY_PARAMS: Final[dict[str, set[str]]] = {"youtube.com": {"v"}, "instagram.com": {"img_index"}}
 
 
 def remove_query_params(url: str) -> str:
