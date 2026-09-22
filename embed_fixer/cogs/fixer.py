@@ -40,7 +40,7 @@ if TYPE_CHECKING:
     from embed_fixer.fixes import Domain, FixMethod, ReplaceFix, Website
     from embed_fixer.utils.fetch_info import UgoiraMeta
 
-USERNAME_SUFFIX: Final[str] = " (Embed Fixer)"
+USERNAME_SUFFIX: Final[str] = " (Embed Fixer Fork)"
 ERROR_MSG_DELETE_AFTER: Final[int] = 10
 DEFAULT_FILESIZE_LIMIT: Final[int] = 10 * 1024 * 1024  # 10 MB
 ROTATE_FIX_EMOJI: Final[str] = "🔄"
