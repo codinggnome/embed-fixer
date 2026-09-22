@@ -245,11 +245,17 @@ DOMAINS: Final[list[Domain]] = [
             ),
             FixMethod(
                 id=37,
-                name="OGInstagram",
+                name="OGInstagram - Full Post",
                 fixes=[ReplaceFix(old_domain="instagram.com", new_domain="oginstagram.com")],
                 repo_url="https://github.com/LilasKR/OGInstagram",
-                default=True,
             ),
+            FixMethod(
+                id=38,
+                name="OGInstagram - Media Only",
+                fixes=[ReplaceFix(old_domain="instagram.com", new_domain="g.oginstagram.com")],
+                repo_url="https://github.com/LilasKR/OGInstagram",
+                default=True,
+            )
         ],
     ),
     Domain(
