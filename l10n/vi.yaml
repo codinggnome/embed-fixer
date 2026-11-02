@@ -5,7 +5,9 @@ disable_fixes_desc: Tắt Nhúng Sửa cho các trang web cụ thể. [YouTube b
 lang: Ngôn Ngữ
 lang_desc: Thay đổi ngôn ngữ của bot.
 extract_media_channels: Kênh Trích Xuất Phương Tiện
-extract_media_channels_desc: Hình ảnh/Video từ các liên kết Twitter/X/Pixiv được gửi trong các kênh này sẽ được trích xuất.
+extract_media_channels_desc: Hình ảnh/Video từ các liên kết Twitter/X/Pixiv/Instagram/Bluesky/Kemono được gửi trong các kênh này sẽ được trích xuất.
+disable_extract_media_domains: Tắt Trích Xuất Phương Tiện Cho Các Trang Web
+disable_extract_media_domains_desc: "Liên kết từ các trang web được chọn ở đây sẽ không được trích xuất phương tiện trong các kênh trích xuất phương tiện."
 disable_fix_channels: Danh Sách Đen Kênh Nhúng Sửa
 disable_fix_channels_desc: "Chỉ các kênh được đặt ở đây sẽ không nhận được Nhúng Sửa, danh sách trắng được ưu tiên hơn danh sách đen."
 enable_fix_channels: Danh Sách Trắng Kênh Nhúng Sửa
@@ -43,6 +45,7 @@ using_fix_service: "Đang sử dụng {service}"
 fix_embed: Sữa Nhúng
 extract_medias: Xuất Phương tiện
 no_fixes_found: Không tìm thấy nhúng sửa/phương tiện nào cho tin nhắn này
+nsfw_link_skipped: Liên kết này được đánh dấu là nhạy cảm và chỉ có thể được sửa trong các kênh giới hạn độ tuổi
 bot_visibility: Hiển Thị Của Bot
 bot_visibility_desc: "Nếu được bật, Embed Fixer sẽ sửa các bản nhúng do bot khác gửi. Nếu bị tắt, nó sẽ chỉ sửa các bản nhúng do người dùng gửi."
 funnel_target_channel: Phễu Đến Kênh Mục Tiêu
@@ -68,8 +71,6 @@ recommend_original_link_btn: Nên bật "Nút Link Gốc" trong /settings cho b�
 ignore_me_enabled: Bây giờ bạn đã bị bot bỏ qua. Các nhúng của bạn sẽ không được sửa.
 ignore_me_disabled: Bạn không còn bị bot bỏ qua nữa. Các nhúng của bạn sẽ được sửa.
 ignore_me_cmd_desc: Bật/tắt việc Embed Fixer bỏ qua tin nhắn của bạn
-delete_original_message_in_threads: Xóa Tin Nhắn Gốc Trong Chủ Đề
-delete_original_message_in_threads_desc: "Vì chủ đề không thể có webhook, tin nhắn gốc được giữ lại để biết ai đã gửi. Khi bật, tin nhắn gốc trong chủ đề sẽ bị xóa sau khi gửi nhúng đã sửa."
 fix_url_command_desc: Sửa một URL và nhận phiên bản thân thiện với nhúng
 fix_url_param: liên-kết
 fix_url_param_desc: URL cần sửa
@@ -86,3 +87,10 @@ invalid_seconds: "Giá trị không hợp lệ. Vui lòng nhập một số nguy
 seconds_placeholder: "{min} - {max} (để trống để tắt)"
 disable_embed_suppression: Tắt Ẩn Nhúng Của Tin Nhắn Gốc
 disable_embed_suppression_desc: 'Ở chế độ sửa "trả lời" và "gửi lại bằng bot", bot sẽ ẩn nhúng của tin nhắn gốc. Khi bật, nhúng của tin nhắn gốc sẽ được giữ lại, và việc xóa chúng do người dùng và quản trị viên tự quyết định.'
+proxy_tags: Thẻ Proxy
+proxy_tags_desc: 'Nếu bạn dùng bot proxy như Tupperbox, hãy thêm thẻ của các nhân vật vào đây để Embed Fixer nhường các tin nhắn có thẻ đó cho bot ấy xử lý. Tin nhắn do bot proxy gửi vẫn sẽ được sửa nếu máy chủ bật "Hiển Thị Của Bot". Hãy cập nhật lại mỗi khi bạn thêm nhân vật hoặc đổi thẻ của nhân vật.'
+proxy_tags_modal_desc: 'Mỗi dòng một thẻ, dùng "text" ở vị trí tin nhắn của bạn, ví dụ ":cgg text" hoặc "[text]".'
+edit: Chỉnh sửa
+invalid_proxy_tag: 'Thẻ {tag} không hợp lệ: thẻ phải chứa "text" cùng tiền tố và/hoặc hậu tố bao quanh, ví dụ ":cgg text" hoặc "[text]".'
+too_many_proxy_tags: "Bạn chỉ có thể lưu tối đa {max} thẻ."
+proxy_tags_saved: Đã lưu thẻ proxy.

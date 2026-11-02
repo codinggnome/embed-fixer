@@ -5,7 +5,9 @@ disable_fixes_desc: Schakel Embed Fixes uit voor specifieke websites. [YouTube i
 lang: Taal
 lang_desc: Verander de taal van de bot.
 extract_media_channels: Media Extractie Kanalen
-extract_media_channels_desc: "Afbeeldingen/video's van Twitter/X/Pixiv-links die in deze kanalen worden verzonden, worden geëxtraheerd."
+extract_media_channels_desc: "Afbeeldingen/video's van Twitter/X/Pixiv/Instagram/Bluesky/Kemono-links die in deze kanalen worden verzonden, worden geëxtraheerd."
+disable_extract_media_domains: Schakel Media Extractie Voor Websites Uit
+disable_extract_media_domains_desc: "Van links van de hier geselecteerde websites worden in media extractie kanalen geen media geëxtraheerd."
 disable_fix_channels: Embed Fix Kanalen Blacklist
 disable_fix_channels_desc: "Kanalen hier ontvangen geen Embed Fixes, de whitelist heeft voorrang op de blacklist."
 enable_fix_channels: Embed Fix Kanalen Whitelist
@@ -43,6 +45,7 @@ using_fix_service: "Gebruik van {service}"
 fix_embed: Fix Embed
 extract_medias: Media Extraheren
 no_fixes_found: Er zijn geen fixes/media gevonden voor dit bericht
+nsfw_link_skipped: Deze link is gemarkeerd als gevoelig en kan alleen worden gerepareerd in kanalen met leeftijdsbeperking
 bot_visibility: Bot Zichtbaarheid
 bot_visibility_desc: "Indien ingeschakeld, repareert Embed Fixer embeds die door andere bots zijn verzonden. Indien uitgeschakeld, worden alleen embeds hersteld die door gebruikers zijn verzonden."
 funnel_target_channel: Stuur Alles Naar Doel Kanaal
@@ -68,8 +71,6 @@ recommend_original_link_btn: 'Het wordt aanbevolen om de "Originele Link Button"
 ignore_me_enabled: Je wordt nu genegeerd door de bot. Je embeds worden niet meer gefixt.
 ignore_me_disabled: Je wordt niet meer genegeerd door de bot. Je embeds worden gefixt.
 ignore_me_cmd_desc: Schakel of Embed Fixer je berichten moet negeren
-delete_original_message_in_threads: Originele Berichten in Threads Verwijderen
-delete_original_message_in_threads_desc: "Omdat threads geen webhooks kunnen hebben, wordt het originele bericht bewaard om te weten wie het heeft verzonden. Indien ingeschakeld wordt het originele bericht in threads verwijderd na het verzenden van de gefixte embed."
 fix_url_command_desc: Fix een URL en krijg de embed-vriendelijke versie
 fix_url_param: link
 fix_url_param_desc: De URL om te fixen
@@ -86,3 +87,10 @@ invalid_seconds: "Ongeldige waarde. Voer een geheel getal in tussen {min} en {ma
 seconds_placeholder: "{min} - {max} (laat leeg om uit te schakelen)"
 disable_embed_suppression: Onderdrukken van Originele Embeds Uitschakelen
 disable_embed_suppression_desc: 'Bij de fixmodi "reply" en "resend as bot" onderdrukt de bot de embeds van het originele bericht. Indien ingeschakeld blijven de originele embeds behouden en wordt het verwijderen ervan overgelaten aan gebruikers en moderators.'
+proxy_tags: Proxy-tags
+proxy_tags_desc: 'Gebruik je een proxybot zoals Tupperbox? Voeg hier de tags van je personages toe, dan laat Embed Fixer je berichten met die tags aan die bot over. Het bericht van de proxybot wordt nog steeds gefixt als de server "Bot Zichtbaarheid" heeft ingeschakeld. Werk de tags bij wanneer je een personage toevoegt of de tags ervan wijzigt.'
+proxy_tags_modal_desc: 'Eén tag per regel, met "text" waar je bericht komt, bijv. ":cgg text" of "[text]".'
+edit: Bewerken
+invalid_proxy_tag: 'Ongeldige tag {tag}: deze moet "text" bevatten met een prefix en/of suffix eromheen, bijv. ":cgg text" of "[text]".'
+too_many_proxy_tags: "Je kunt maximaal {max} tags opslaan."
+proxy_tags_saved: Proxy-tags opgeslagen.

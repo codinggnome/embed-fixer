@@ -5,7 +5,9 @@ disable_fixes_desc: "Disable embed fixes for specific websites. [YouTube is disa
 lang: Language
 lang_desc: Change the language of the bot.
 extract_media_channels: Media Extraction Channels
-extract_media_channels_desc: Images/Videos from Twitter/X/Pixiv links sent in these channels will be extracted.
+extract_media_channels_desc: Images/Videos from Twitter/X/Pixiv/Instagram/Bluesky/Kemono links sent in these channels will be extracted.
+disable_extract_media_domains: Disable Media Extraction for Websites
+disable_extract_media_domains_desc: "Links from websites selected here will not have their media extracted in media extraction channels."
 disable_fix_channels: Embed Fix Channel Blacklist
 disable_fix_channels_desc: "Channels here will not receive embed fixes, whitelist has priority over blacklist."
 enable_fix_channels: Embed Fix Channel Whitelist
@@ -43,6 +45,7 @@ using_fix_service: "Using {service}"
 fix_embed: Fix Embed
 extract_medias: Extract Medias
 no_fixes_found: No fixes/medias found for this message
+nsfw_link_skipped: This link is marked as sensitive and can only be fixed in age-restricted channels
 bot_visibility: Bot Visibility
 bot_visibility_desc: "If enabled, Embed Fixer will fix embeds sent by other bots. If disabled, it will only fix embeds sent by users."
 funnel_target_channel: Funnel to Target Channel
@@ -68,8 +71,6 @@ recommend_original_link_btn: It is recommended to enable "Original Link Button" 
 ignore_me_enabled: You are now ignored by the bot. Your embeds will not be fixed.
 ignore_me_disabled: You are no longer ignored by the bot. Your embeds will be fixed.
 ignore_me_cmd_desc: Toggle whether Embed Fixer should ignore your messages
-delete_original_message_in_threads: Delete Original Messages in Threads
-delete_original_message_in_threads_desc: "Because threads can't have webhooks, the original message is kept to know who sent it. When enabled, the original message in threads will be deleted after sending the fixed embed."
 fix_url_command_desc: Fix a URL and get the embed-friendly version
 fix_url_param: link
 fix_url_param_desc: The URL to fix
@@ -88,6 +89,13 @@ fix_mode_reply_desc: "Reply to the original message with the fix, keeping the or
 fix_mode_resend: Resend as Bot
 fix_mode_resend_desc: "Send the fix as the bot itself, keeping the original message."
 fix_mode_follow_server: Follow Server Setting
+proxy_tags: Proxy Tags
+proxy_tags_desc: "If you use a proxy bot like Tupperbox, add your characters' tags here so Embed Fixer leaves your tagged messages to it. The proxied message is still fixed if the server has Bot Visibility enabled. Update these whenever you add a character or change its tags."
+proxy_tags_modal_desc: "One tag per line, with \"text\" where your message goes, e.g. \":cgg text\" or \"[text]\"."
+edit: Edit
+invalid_proxy_tag: "Invalid tag {tag}: it must contain \"text\" with a prefix and/or suffix around it, e.g. \":cgg text\" or \"[text]\"."
+too_many_proxy_tags: "You can save at most {max} tags."
+proxy_tags_saved: Proxy tags saved.
 remove_reactions_after: Remove Reactions After
 remove_reactions_after_desc: "Set the number of seconds after which the delete and switch fix reaction emojis are automatically removed. Leave a field empty to disable."
 delete_reaction_seconds: Delete Reaction (Seconds)
@@ -108,3 +116,6 @@ rotate_fix_reaction: Rotate Fix Reaction
 rotate_fix_reaction_desc: "When enabled, the bot adds a \U0001F504 reaction to fixed messages. The original author can click it to cycle to the next available embed fix service."
 disable_embed_suppression: Disable Original Embed Suppression
 disable_embed_suppression_desc: "For the \"reply\" and \"resend as bot\" fix modes, the bot suppresses the embeds of the original message. When enabled, the original embeds are kept instead, and removing them is left to users and moderators."
+hide_webhook_suffix: Hide Webhook Username Suffix
+hide_webhook_suffix_desc: "When enabled, messages resent through webhooks show the original author's name without the \" (Embed Fixer)\" suffix.\n\U0001F48E Sponsor-only: at least one administrator of this server must be a sponsor."
+sponsor_only_feature: "\U0001F48E **This is a sponsor-only feature.**\n\nTo unlock it for this server, at least one of its administrators needs to be a sponsor.\n1. [Donate here](<https://link.seria.moe/donate>)\n2. Contact [Seria on Discord](<https://discord.com/users/410036441129943050>) to activate\n\nOnce unlocked, any administrator can change this setting."

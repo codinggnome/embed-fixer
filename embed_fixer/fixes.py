@@ -29,6 +29,16 @@ class DomainId(IntEnum):
     YOUTUBE = 19
 
 
+EXTRACTABLE_DOMAIN_IDS: Final[tuple[DomainId, ...]] = (
+    DomainId.TWITTER,
+    DomainId.PIXIV,
+    DomainId.INSTAGRAM,
+    DomainId.BLUESKY,
+    DomainId.KEMONO,
+)
+"""Domains supported by media extraction."""
+
+
 @dataclass(kw_only=True)
 class ReplaceFix:
     old_domain: str
@@ -139,7 +149,7 @@ DOMAINS: Final[list[Domain]] = [
         id=DomainId.TIKTOK,
         name="TikTok",
         websites=[
-            Website(r"https://(www.)?tiktok.com/(t/\w+|@[\w.]+/video/\d+)/?"),
+            Website(r"https://(www.)?tiktok.com/(t/\w+|@[\w.]+/(video|photo)/\d+)/?"),
             Website(r"https://vm.tiktok.com/\w+/?"),
             Website(r"https://vt.tiktok.com/\w+/?"),
         ],
@@ -347,6 +357,7 @@ DOMAINS: Final[list[Domain]] = [
             Website(r"https://(www.|web.)?facebook.com/share/r/[\w]+/?"),
             Website(r"https://(www.|web.)?facebook.com/reel/\d+/?"),
             Website(r"https://(www.|web.)?facebook.com/share/v/[\w]+/?"),
+            Website(r"https://(www.|web.)?facebook.com/marketplace/", skip_method_ids=[15, 25]),
             Website(r"https://(www.|web.)?facebook.com/(.*)", skip_method_ids=[15]),
         ],
         fix_methods=[

@@ -5,7 +5,9 @@ disable_fixes_desc: 停用特定網站的連結預覽修復。[YouTube 預設為
 lang: 語言
 lang_desc: 更改機器人的語言。
 extract_media_channels: 媒體提取頻道
-extract_media_channels_desc: 在這些頻道中發送的 Twitter/X/Pixiv 鏈接的圖片/影片將被提取。
+extract_media_channels_desc: 在這些頻道中發送的 Twitter/X/Pixiv/Instagram/Bluesky/Kemono 鏈接的圖片/影片將被提取。
+disable_extract_media_domains: 停用網站的媒體提取
+disable_extract_media_domains_desc: "在媒體提取頻道中，來自此處選擇的網站的連結將不會被提取媒體。"
 disable_fix_channels: 連結預覽修復頻道黑名單
 disable_fix_channels_desc: "這裡的頻道將不會接收連結預覽修復，白名單優先於黑名單。"
 enable_fix_channels: 連結預覽修復頻道白名單
@@ -43,6 +45,7 @@ using_fix_service: "正在使用 {service}"
 fix_embed: 修復連結預覽
 extract_medias: 提取媒體
 no_fixes_found: 找不到此訊息的連結預覽修復/媒體
+nsfw_link_skipped: 此連結被標記為敏感內容，只能在年齡限制頻道中修復
 bot_visibility: 機器人能見度
 bot_visibility_desc: "啟用後，Embed Fixer 會修復來自其他機器人的連結預覽。如果停用，它將只修復來自使用者的連結預覽。"
 funnel_target_channel: 引流目標頻道
@@ -68,8 +71,6 @@ recommend_original_link_btn: 推薦在 /settings 中啟用「原連結按鈕」�
 ignore_me_enabled: 從現在起，機器人將不再忽略你的訊息，你的連結預覽將會被修復。
 ignore_me_disabled: 從現在起，機器人將忽略你的訊息，你的連結預覽將不會被修復。
 ignore_me_cmd_desc: 開關 Embed Fixer 是否要忽略你的訊息
-delete_original_message_in_threads: 刪除討論串中的原訊息
-delete_original_message_in_threads_desc: "由於討論串中不能有 Webhook，原訊息將被保留，以用於展示誰傳送了原本的訊息。啟用後將在討論串中修復連結預覽後刪除原訊息。"
 fix_url_command_desc: 修復一個連結的連結預覽
 fix_url_param: 連結
 fix_url_param_desc: 要修復的連結
@@ -92,3 +93,10 @@ invalid_seconds: "無效的值，請輸入 {min} 到 {max} 之間的整數。"
 seconds_placeholder: "{min} - {max}（留空則停用）"
 disable_embed_suppression: 停用隱藏原訊息預覽
 disable_embed_suppression_desc: "在「回覆」與「以機器人身分重新傳送」修復模式下，機器人會隱藏原訊息的連結預覽。啟用後將保留原訊息的預覽，是否移除交由使用者與管理員自行決定。"
+proxy_tags: 代理標籤
+proxy_tags_desc: "如果你在用 Tupperbox 等代理機器人，請在這裡加入你角色的標籤，Embed Fixer 就不會處理帶有這些標籤的訊息，而是交給代理機器人。伺服器啟用「機器人能見度」後，代理機器人發出的訊息仍會被修復。每次新增角色或更改標籤後，記得同步更新這裡。"
+proxy_tags_modal_desc: "每行一個標籤，用「text」代表訊息內容的位置，例如「:cgg text」或「[text]」。"
+edit: 編輯
+invalid_proxy_tag: "無效的標籤 {tag}：標籤必須包含「text」，且前後至少要有前綴或後綴，例如「:cgg text」或「[text]」。"
+too_many_proxy_tags: "最多只能儲存 {max} 個標籤。"
+proxy_tags_saved: 代理標籤已儲存。

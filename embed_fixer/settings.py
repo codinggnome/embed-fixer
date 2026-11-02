@@ -5,6 +5,7 @@ class GuildSetting(StrEnum):
     LANG = "lang"
     DISABLE_FIXES = "disable_fixes"
     EXTRACT_MEDIA_CHANNELS = "extract_media_channels"
+    DISABLE_EXTRACT_MEDIA_DOMAINS = "disable_extract_media_domains"
     DISABLE_FIX_CHANNELS = "disable_fix_channels"
     ENABLE_FIX_CHANNELS = "enable_fix_channels"
     DISABLE_WEBHOOK_REPLY = "disable_webhook_reply"
@@ -17,11 +18,11 @@ class GuildSetting(StrEnum):
     FUNNEL_TARGET_CHANNEL = "funnel_target_channel"
     WHITELIST_ROLE_IDS = "whitelist_role_ids"
     SHOW_ORIGINAL_LINK_BUTTON = "show_original_link_btn"
-    DELETE_ORIGINAL_MESSAGE_IN_THREADS = "delete_original_message_in_threads"
     FIX_MODE = "fix_mode"
     REMOVE_REACTIONS_AFTER = "remove_reactions_after"
     ROTATE_FIX_REACTION = "rotate_fix_reaction"
     DISABLE_EMBED_SUPPRESSION = "disable_embed_suppression"
+    HIDE_WEBHOOK_SUFFIX = "hide_webhook_suffix"
 
 
 class UserSetting(StrEnum):

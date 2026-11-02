@@ -32,6 +32,7 @@ from embed_fixer.utils.misc import (
     sanitize_username,
     unsanitize_username,
 )
+from embed_fixer.utils.sponsors import sponsors
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -46,7 +47,7 @@ DEFAULT_FILESIZE_LIMIT: Final[int] = 10 * 1024 * 1024  # 10 MB
 ROTATE_FIX_EMOJI: Final[str] = "🔄"
 FIXED_MESSAGE_RETENTION_DAYS: Final[int] = 90
 
-type SendType = Literal["webhook", "reply", "channel", "resend", "interaction"]
+type SendType = Literal["webhook", "reply", "resend", "interaction"]
 
 
 class MockMessage:
@@ -95,6 +96,7 @@ class FindFixResult(BaseModel):
     content: str
     author_md: str
     urls: list[str]
+    nsfw_skipped: bool = False
 
 
 def _parse_new_domain_parts(new_domain: str) -> tuple[str, str]:
@@ -209,6 +211,9 @@ class FixerCog(commands.Cog):
         self.extract_medias_ctx = app_commands.ContextMenu(
             name=app_commands.locale_str("extract_medias"), callback=self.extract_medias
         )
+        # Webhooks this bot sends through, registered before each send so the bot can
+        # recognize its own webhook messages even when they don't have the username suffix
+        self._own_webhook_ids: set[int] = set()
 
     async def cog_load(self) -> None:
         self.bot.tree.add_command(self.fix_embed_ctx)
@@ -397,9 +402,11 @@ class FixerCog(commands.Cog):
         sauces: list[str] = []
         content = ""
         author_md = ""
+        nsfw_skipped = False
 
         is_nsfw_channel = (
-            is_ctx_menu
+            # DMs, or guilds the bot isn't in (user-installed commands)
+            message.guild is None
             # Text or Voice channel is nsfw
             or (
                 isinstance(message.channel, (discord.TextChannel, discord.VoiceChannel))
@@ -428,10 +435,13 @@ class FixerCog(commands.Cog):
             logger.debug(f"Matched domain {domain.id!r} for URL: {clean_url}")
 
             if await self._nsfw_skip(url, domain, is_nsfw_channel=is_nsfw_channel):
+                nsfw_skipped = True
                 continue
 
             if extract_media or (
-                settings is not None and channel_id in settings.extract_media_channels
+                settings is not None
+                and channel_id in settings.extract_media_channels
+                and domain.id.value not in settings.disable_extract_media_domains
             ):
                 if not is_ctx_menu and isinstance(message, discord.Message):
                     asyncio.create_task(add_reaction_safe(message, "⌛"))
@@ -519,6 +529,7 @@ class FixerCog(commands.Cog):
             content=content,
             author_md=author_md,
             urls=[url for url, _ in urls],
+            nsfw_skipped=nsfw_skipped,
         )
 
     async def _extract_post_info(
@@ -564,7 +575,9 @@ class FixerCog(commands.Cog):
             elif domain_id is DomainId.KEMONO:
                 media_urls = await self.fetch_info.kemono(url)
             elif domain_id is DomainId.INSTAGRAM:
-                media_urls = await self.fetch_info.instagram(remove_query_params(url))
+                info = await self.fetch_info.instagram(remove_query_params(url))
+                content = "" if info is None else info.caption or ""
+                media_urls = [] if info is None else [media.url for media in info.media]
             else:
                 return PostExtractionResult(medias=[], content="", author_md="")
         except Exception:
@@ -822,9 +835,9 @@ class FixerCog(commands.Cog):
         | discord.abc.MessageableChannel
         | discord.abc.PrivateChannel,
         files: list[discord.File],
-        guild_settings: GuildSettings | None,
         *,
         fix_mode: FixMode = FixMode.DELETE_AND_RESEND,
+        hide_username_suffix: bool = False,
         **kwargs: Any,
     ) -> tuple[discord.Message | None, SendType]:
         """Send message via webhook, reply, or plain resend depending on the fix mode."""
@@ -839,8 +852,16 @@ class FixerCog(commands.Cog):
 
             if webhook is not None:
                 try:
+                    thread = (
+                        webhook_channel if isinstance(webhook_channel, discord.Thread) else None
+                    )
                     return await self._send_webhook(
-                        message, webhook, files=files, **kwargs
+                        message,
+                        webhook,
+                        files=files,
+                        thread=thread,
+                        hide_username_suffix=hide_username_suffix,
+                        **kwargs,
                     ), "webhook"
                 except Exception as e:
                     err_message = translator.translate(
@@ -851,13 +872,6 @@ class FixerCog(commands.Cog):
                         f"{err_message}\n\n{e}", delete_after=ERROR_MSG_DELETE_AFTER
                     )
                     raise
-            elif guild_settings is not None and guild_settings.delete_original_message_in_threads:
-                return (
-                    await message.channel.send(
-                        message.content, tts=message.tts, files=files, **kwargs
-                    ),
-                    "channel",
-                )
 
         # fix_mode is REPLY, or no webhook is available
         return await message.reply(
@@ -938,8 +952,10 @@ class FixerCog(commands.Cog):
                     message,
                     webhook_channel,
                     files,
-                    guild_settings=guild_settings,
                     fix_mode=fix_mode,
+                    hide_username_suffix=guild_settings is not None
+                    and guild_settings.hide_webhook_suffix
+                    and await sponsors.is_guild_unlocked(guild_settings.id),
                     **kwargs,
                 )
             except discord.HTTPException as e:
@@ -1042,17 +1058,22 @@ class FixerCog(commands.Cog):
         message: discord.Message,
         webhook: discord.Webhook,
         files: list[discord.File] | None = None,
+        thread: discord.Thread | None = None,
+        *,
+        hide_username_suffix: bool = False,
         **kwargs: Any,
     ) -> discord.Message:
         files = files or []
+        suffix = "" if hide_username_suffix else USERNAME_SUFFIX
         return await webhook.send(
             message.content,
-            username=f"{sanitize_username(message.author.display_name)}{USERNAME_SUFFIX}",
+            username=f"{sanitize_username(message.author.display_name)}{suffix}",
             avatar_url=message.author.display_avatar.url,
             tts=message.tts,
             wait=True,
             files=files,
             silent=True,
+            thread=thread or discord.utils.MISSING,
             **kwargs,
         )
 
@@ -1063,28 +1084,33 @@ class FixerCog(commands.Cog):
         | discord.abc.PrivateChannel,
         guild: discord.Guild | None,
     ) -> discord.Webhook | None:
-        if not isinstance(channel, discord.TextChannel):
+        # Threads can't own webhooks, but their parent's webhook can post into them
+        parent = channel.parent if isinstance(channel, discord.Thread) else channel
+        if not isinstance(parent, discord.TextChannel | discord.ForumChannel):
             return None
 
         try:
-            webhooks = await channel.webhooks()
+            webhooks = await parent.webhooks()
         except discord.Forbidden:
-            with contextlib.suppress(discord.Forbidden):
-                await channel.send(
-                    translator.translate(
-                        "no_perms_to_manage_webhooks", lang=await translator.get_guild_lang(guild)
-                    ),
-                    delete_after=ERROR_MSG_DELETE_AFTER,
-                )
+            if isinstance(channel, discord.Thread | discord.TextChannel):
+                with contextlib.suppress(discord.Forbidden):
+                    await channel.send(
+                        translator.translate(
+                            "no_perms_to_manage_webhooks",
+                            lang=await translator.get_guild_lang(guild),
+                        ),
+                        delete_after=ERROR_MSG_DELETE_AFTER,
+                    )
             return None
 
         webhook_name = self.bot.user.name
         webhook = discord.utils.get(webhooks, name=webhook_name)
         if webhook is None:
-            webhook = await channel.create_webhook(
+            webhook = await parent.create_webhook(
                 name=webhook_name, avatar=await self.bot.user.display_avatar.read()
             )
 
+        self._own_webhook_ids.add(webhook.id)
         return webhook
 
     async def _handle_reply(self, message: discord.Message, resolved_ref: discord.Message) -> None:
@@ -1322,7 +1348,12 @@ class FixerCog(commands.Cog):
                 webhook = await self._get_or_create_webhook(message.channel, guild)
                 if webhook is None:
                     return
-                await webhook.edit_message(message.id, content=new_content)
+                thread = (
+                    message.channel
+                    if isinstance(message.channel, discord.Thread)
+                    else discord.utils.MISSING
+                )
+                await webhook.edit_message(message.id, content=new_content, thread=thread)
             else:
                 await message.edit(
                     content=new_content,
@@ -1345,6 +1376,20 @@ class FixerCog(commands.Cog):
     ) -> None:
         await FixedMessage.filter(id__in=payload.message_ids).delete()
 
+    @staticmethod
+    async def _is_proxy_trigger(message: discord.Message) -> bool:
+        """Whether this message matches one of its author's proxy tags.
+
+        Such messages are left to the proxy bot (e.g. Tupperbox), whose own message is fixed
+        instead if bot visibility is on.
+        """
+        if message.author.bot:
+            return False
+        user_settings = await UserSettings.get_or_none(id=message.author.id)
+        return user_settings is not None and any(
+            tag.matches(message.content) for tag in user_settings.proxy_tags
+        )
+
     @commands.Cog.listener("on_message")
     async def embed_fixer(self, message: discord.Message) -> None:
         if message.content.startswith(f"{self.bot.user.mention} jsk py"):
@@ -1353,7 +1398,8 @@ class FixerCog(commands.Cog):
         channel, guild, author = message.channel, message.guild, message.author
 
         if (
-            self._is_fixed_webhook_message(message)
+            message.webhook_id in self._own_webhook_ids
+            or self._is_fixed_webhook_message(message)
             or self.bot.user.id == author.id
             or guild is None
             or await IgnoreMe.contains(author.id)
@@ -1370,6 +1416,7 @@ class FixerCog(commands.Cog):
             self._skip_channel(guild_settings, channel.id)
             or (not guild_settings.bot_visibility and author.bot)
             or whitelist_role_skip
+            or await self._is_proxy_trigger(message)
         ):
             return
 
@@ -1398,9 +1445,7 @@ class FixerCog(commands.Cog):
                 capture_exception(e)
                 return
 
-            if send_type in {"webhook", "channel"}:
-                # send_type is only "channel" when delete_original_message_in_threads is enabled
-                # this is checked in _send_via_fix_mode.
+            if send_type == "webhook":
                 await self.delete_message_safe(message, channel, guild)
             elif send_type in {"reply", "resend"}:
                 if not guild_settings.disable_embed_suppression:
@@ -1486,13 +1531,12 @@ class FixerCog(commands.Cog):
             except discord.Forbidden:
                 logger.warning(f"Failed to send fixes in {i.channel_id=} in {i.guild_id=}")
         else:
-            await i.followup.send(
-                translator.translate(
-                    "no_fixes_found",
-                    lang=await translator.get_guild_lang(i.guild),
-                    url=message.jump_url,
-                )
-            )
+            guild_lang = await translator.get_guild_lang(i.guild)
+            key = "nsfw_link_skipped" if result.nsfw_skipped else "no_fixes_found"
+            # The deferred response is public, so the first followup would inherit that;
+            # delete it so the followup is sent as a new ephemeral message.
+            await i.delete_original_response()
+            await i.followup.send(translator.translate(key, lang=guild_lang), ephemeral=True)
 
     async def fix_embed(self, i: Interaction, message: discord.Message) -> None:
         await self.base_ctx_menu(i, message, extract_media=False)
@@ -1516,25 +1560,11 @@ class FixerCog(commands.Cog):
 
         mock_message = MockMessage(content=link, channel=i.channel, guild=i.guild, author=i.user)
 
-        is_nsfw_channel = (
-            i.guild is None
-            or (
-                isinstance(i.channel, (discord.TextChannel, discord.VoiceChannel))
-                and i.channel.nsfw
-            )
-            or (
-                isinstance(i.channel, discord.Thread)
-                and i.channel.parent is not None
-                and i.channel.parent.nsfw
-            )
-        )
-
         result = await self._find_fixes(
             mock_message,
             settings=None,
             filesize_limit=DEFAULT_FILESIZE_LIMIT if i.guild is None else i.guild.filesize_limit,
             extract_media=extract_media,
-            is_ctx_menu=is_nsfw_channel,
         )
 
         if result.fix_found:
@@ -1565,9 +1595,11 @@ class FixerCog(commands.Cog):
                 await i.followup.send(response_content)
         else:
             guild_lang = await translator.get_guild_lang(i.guild)
-            await i.followup.send(
-                translator.translate("no_fixes_found", lang=guild_lang, url=link), ephemeral=True
-            )
+            key = "nsfw_link_skipped" if result.nsfw_skipped else "no_fixes_found"
+            # The deferred response is public, so the first followup would inherit that;
+            # delete it so the followup is sent as a new ephemeral message.
+            await i.delete_original_response()
+            await i.followup.send(translator.translate(key, lang=guild_lang), ephemeral=True)
 
 
 async def setup(bot: EmbedFixer) -> None:

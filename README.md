@@ -1,4 +1,4 @@
-![Embed Fixer](https://i.imgur.com/919Gum1.png)
+![Embed Fixer](https://ef.seria.moe/og-image.png)
 
 ![GitHub issues](https://img.shields.io/github/issues/seriaati/embed-fixer)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/seriaati/embed-fixer)
@@ -138,7 +138,8 @@ Below are settings you can change with the `/settings` command:
 
 - **Language**: Change the language of the bot.
 - **Disable Embed Fixes for Websites**: Disable embed fixes for specific websites. [YouTube is disabled by default](https://github.com/seriaati/embed-fixer#about-youtube-embed-fixing).
-- **Media Extraction Channels**: Images/Videos from Twitter/X/Pixiv links sent in these channels will be extracted.
+- **Media Extraction Channels**: Images/Videos from Twitter/X/Pixiv/Instagram/Bluesky/Kemono links sent in these channels will be extracted.
+- **Disable Media Extraction for Websites**: Links from websites selected here will not have their media extracted in media extraction channels.
 - **Embed Fix Channel Blacklist**: Channels here will not receive embed fixes, whitelist has priority over blacklist.
 - **Embed Fix Channel Whitelist**: Only channels set here will receive embed fixes, whitelist has priority over blacklist.
 - **Disable Webhook Reply**: Disable the ping to the original author when replying to a webhook.
@@ -151,11 +152,13 @@ Below are settings you can change with the `/settings` command:
 - **Funnel to Target Channel**: If set, all fixed embeds and extract medias will be sent to the target channel instead of the original channel.
 - **Whitelist Roles**: If set, only users that have one of these roles will have their embeds fixed. Leave empty to disable.
 - **Original Link Button**: Show a button linking to the original post in fixed embed messages.
-- **Delete Original Messages in Threads**: Because threads can't have webhooks, the original message is kept to know who sent it. When enabled, the original message in threads will be deleted after sending the fixed embed.
 - **Fix Mode**: How fixed embeds are sent.
 - **Remove Reactions After**: Set the number of seconds after which the delete and switch fix reaction emojis are automatically removed. Leave a field empty to disable.
 - **Rotate Fix Reaction**: When enabled, the bot adds a 🔄 reaction to fixed messages. The original author can click it to cycle to the next available embed fix service.
 - **Disable Original Embed Suppression**: For the "reply" and "resend as bot" fix modes, the bot suppresses the embeds of the original message. When enabled, the original embeds are kept instead, and removing them is left to users and moderators.
+- **Hide Webhook Username Suffix**: When enabled, messages resent through webhooks show the original author's name without the " (Embed Fixer)" suffix.
+💎 Sponsor-only: at least one administrator of this server must be a sponsor.
+💎 Sponsor-only: at least one administrator of this server must be a sponsor.
 
 ## Post Content Translation
 

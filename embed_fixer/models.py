@@ -1,4 +1,3 @@
-# pyright: reportAssignmentType=false
 from __future__ import annotations
 
 import contextlib
@@ -102,6 +101,17 @@ class FixedMessage(Model):
         table = "fixed_messages"
 
 
+class SponsoredGuild(Model):
+    """A guild with a sponsor-only feature enabled, and the administrator sponsor unlocking it."""
+
+    id = fields.BigIntField(pk=True, generated=False)
+    sponsor_id: fields.Field[int | None] = fields.BigIntField(null=True)
+    """`None` means no administrator of the guild is currently a sponsor."""
+
+    class Meta:
+        table = "sponsored_guilds"
+
+
 class GuildSettingsTable(SettingsTable):
     class Meta:
         table = "guild_settings_v2"
@@ -112,6 +122,33 @@ class UserSettingsTable(SettingsTable):
         table = "user_settings"
 
 
+class ProxyTag(pydantic.BaseModel):
+    """A proxy bot (e.g. Tupperbox) tag, written as `prefix text suffix`."""
+
+    prefix: str
+    suffix: str
+
+    @classmethod
+    def from_line(cls, line: str) -> Self:
+        """Parse a tag like `:cgg text` or `[text]`.
+
+        Raises:
+            ValueError: If the line has no `text` placeholder, or no prefix and suffix.
+        """
+        prefix, sep, suffix = line.rpartition("text")
+        prefix, suffix = prefix.strip(), suffix.strip()
+        if not sep or not (prefix or suffix):
+            raise ValueError(line)
+        return cls(prefix=prefix, suffix=suffix)
+
+    def to_line(self) -> str:
+        return " ".join(part for part in (self.prefix, "text", self.suffix) if part)
+
+    def matches(self, content: str) -> bool:
+        content = content.strip()
+        return content.startswith(self.prefix) and content.endswith(self.suffix)
+
+
 class UserSettings(BaseSettings):
     _table_class = UserSettingsTable
 
@@ -119,6 +156,8 @@ class UserSettings(BaseSettings):
     lang: str | None = None
     fix_mode: FixMode | None = None
     """Fix mode forced by the user, `None` means follow the guild's setting."""
+    proxy_tags: list[ProxyTag] = pydantic.Field(default_factory=list)
+    """Messages matching any of these are sent by a proxy bot, so they're ignored."""
 
     @pydantic.model_validator(mode="before")
     @classmethod
@@ -138,6 +177,7 @@ class GuildSettings(BaseSettings):
     disable_fix_channels: list[int] = pydantic.Field(default_factory=list)
     enable_fix_channels: list[int] = pydantic.Field(default_factory=list)
     extract_media_channels: list[int] = pydantic.Field(default_factory=list)
+    disable_extract_media_domains: list[int] = pydantic.Field(default_factory=list)
     disable_image_spoilers: list[int] = pydantic.Field(default_factory=list)
     show_post_content_channels: list[int] = pydantic.Field(default_factory=list)
     disable_delete_reaction: bool = False
@@ -149,12 +189,12 @@ class GuildSettings(BaseSettings):
     whitelist_role_ids: list[int] = pydantic.Field(default_factory=list)
     translate_target_lang: str | None = None
     show_original_link_btn: bool = True
-    delete_original_message_in_threads: bool = False
     fix_mode: FixMode = FixMode.DELETE_AND_RESEND
     remove_delete_reaction_after: int | None = None
     remove_rotate_reaction_after: int | None = None
     rotate_fix_reaction: bool = False
     disable_embed_suppression: bool = False
+    hide_webhook_suffix: bool = False
 
     @pydantic.model_validator(mode="before")
     @classmethod

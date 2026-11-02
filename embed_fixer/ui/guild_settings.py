@@ -7,10 +7,11 @@ import discord
 from discord import ButtonStyle, ChannelType, SelectOption
 
 from embed_fixer.core.translator import DEFAULT_LANG, translator
-from embed_fixer.fixes import DOMAINS, DomainId
+from embed_fixer.fixes import DOMAINS, EXTRACTABLE_DOMAIN_IDS, DomainId
 from embed_fixer.models import GuildFixMethod, GuildSettings
 from embed_fixer.settings import GuildSetting
-from embed_fixer.ui.common import FixModeSelector, SettingsSection
+from embed_fixer.ui.common import FixModeSelector, SettingsSection, SettingsToggleButton
+from embed_fixer.utils.sponsors import sponsors
 
 from . import components as ui
 
@@ -38,9 +39,9 @@ NO_HEADER_SETTINGS = {
     GuildSetting.DISABLE_DELETE_REACTION,
     GuildSetting.BOT_VISIBILITY,
     GuildSetting.SHOW_ORIGINAL_LINK_BUTTON,
-    GuildSetting.DELETE_ORIGINAL_MESSAGE_IN_THREADS,
     GuildSetting.ROTATE_FIX_REACTION,
     GuildSetting.DISABLE_EMBED_SUPPRESSION,
+    GuildSetting.HIDE_WEBHOOK_SUFFIX,
 }
 
 MULTI_CHANNEL_SETTING_ATTRS: dict[GuildSetting, str] = {
@@ -64,10 +65,12 @@ TOGGLE_SETTING_ATTRS: dict[GuildSetting, str] = {
     GuildSetting.DISABLE_DELETE_REACTION: "disable_delete_reaction",
     GuildSetting.BOT_VISIBILITY: "bot_visibility",
     GuildSetting.SHOW_ORIGINAL_LINK_BUTTON: "show_original_link_btn",
-    GuildSetting.DELETE_ORIGINAL_MESSAGE_IN_THREADS: "delete_original_message_in_threads",
     GuildSetting.ROTATE_FIX_REACTION: "rotate_fix_reaction",
     GuildSetting.DISABLE_EMBED_SUPPRESSION: "disable_embed_suppression",
+    GuildSetting.HIDE_WEBHOOK_SUFFIX: "hide_webhook_suffix",
 }
+
+SPONSOR_ONLY_SETTINGS = {GuildSetting.HIDE_WEBHOOK_SUFFIX}
 
 
 class DeleteMsgEmojiModal(ui.Modal):
@@ -348,6 +351,9 @@ class GuildSettingsView(ui.LayoutView):
             value=cast("bool", getattr(guild_settings, settings_attr)),
             settings_key=settings_attr,
             settings_type="guild",
+            button_cls=SponsorToggleButton
+            if setting in SPONSOR_ONLY_SETTINGS
+            else SettingsToggleButton,
         )
         container.add_item(section)
 
@@ -371,7 +377,7 @@ class GuildSettingsView(ui.LayoutView):
         self._add_selector_action_row(container, selector, action_row_id=ROLE_SELECTOR_ROW_ID)
         return cast("list[int]", getattr(guild_settings, attr_name))
 
-    async def start(self, i: Interaction, *, setting: GuildSetting) -> None:  # ruff: ignore[too-many-branches]
+    async def start(self, i: Interaction, *, setting: GuildSetting) -> None:  # ruff: ignore[too-many-branches, too-many-statements]
         await i.response.defer(ephemeral=True)
 
         guild_settings, _ = await GuildSettings.get_or_create(id=self.guild.id)
@@ -395,6 +401,14 @@ class GuildSettingsView(ui.LayoutView):
             )
             self._add_selector_action_row(
                 container, fix_selector, action_row_id=FIX_SELECTOR_ROW_ID
+            )
+
+        elif setting is GuildSetting.DISABLE_EXTRACT_MEDIA_DOMAINS:
+            extract_selector = DisableExtractMediaDomainSelect(
+                guild_settings.disable_extract_media_domains
+            )
+            self._add_selector_action_row(
+                container, extract_selector, action_row_id=FIX_SELECTOR_ROW_ID
             )
 
         elif setting is GuildSetting.LANG:
@@ -479,6 +493,27 @@ class GuildSettingsView(ui.LayoutView):
         self.message = await i.original_response()
 
 
+class SponsorToggleButton(SettingsToggleButton):
+    """Toggle for a sponsor-only setting, which requires an administrator of the guild to be a sponsor."""
+
+    async def before_toggle(self, i: Interaction, *, value: bool) -> bool:
+        if i.guild is None:
+            return False
+
+        if not value:
+            await sponsors.remove_guild(i.guild.id)
+            return True
+
+        if await sponsors.unlock_guild(i.guild):
+            return True
+
+        lang = await translator.get_guild_lang(i.guild)
+        await i.followup.send(
+            translator.translate("sponsor_only_feature", lang=lang), ephemeral=True
+        )
+        return False
+
+
 class DisableDomainSelect(ui.Select[GuildSettingsView]):
     def __init__(self, disabled: list[int], enabled: list[int]) -> None:
         super().__init__(
@@ -509,6 +544,33 @@ class DisableDomainSelect(ui.Select[GuildSettingsView]):
             d.id.value for d in DOMAINS if not d.enabled_by_default and d.id.value not in selected
         ]
         await guild_settings.save(update_fields=("disabled_domains", "enabled_domains"))
+
+
+class DisableExtractMediaDomainSelect(ui.Select[GuildSettingsView]):
+    def __init__(self, disabled: list[int]) -> None:
+        domains = [domain for domain in DOMAINS if domain.id in EXTRACTABLE_DOMAIN_IDS]
+        super().__init__(
+            options=[
+                SelectOption(
+                    label=domain.name,
+                    value=str(domain.id.value),
+                    default=domain.id.value in disabled,
+                )
+                for domain in domains
+            ],
+            min_values=0,
+            max_values=len(domains),
+        )
+
+    async def callback(self, i: Interaction) -> None:
+        if i.guild is None:
+            return
+
+        await i.response.defer()
+
+        guild_settings, _ = await GuildSettings.get_or_create(id=i.guild.id)
+        guild_settings.disable_extract_media_domains = [int(domain) for domain in self.values]
+        await guild_settings.save(update_fields=("disable_extract_media_domains",))
 
 
 class LangSelector(ui.Select[GuildSettingsView]):
